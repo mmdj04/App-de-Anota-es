@@ -69,8 +69,11 @@ export function MarkdownEditor({ value, onChange }: { value: string; onChange: (
     });
     const view = new EditorView({ state, parent: containerRef.current });
     viewRef.current = view;
-    return () => view.destroy();
-  }, [onChange, value]);
+    return () => {
+      view.destroy();
+      viewRef.current = null;
+    };
+  }, [onChange]);
 
   useEffect(() => {
     const view = viewRef.current;

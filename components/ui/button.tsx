@@ -1,9 +1,10 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export function Button({ className, variant = "default", size = "default", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "outline" | "ghost" | "destructive"; size?: "default" | "sm" | "lg" | "icon" }) {
+export function Button({ className, variant = "default", size = "default", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "secondary" | "outline" | "ghost" | "destructive"; size?: "default" | "sm" | "lg" | "icon" }) {
   const variants = {
     default: "bg-primary text-primary-foreground hover:opacity-90",
+    secondary: "bg-muted text-foreground hover:bg-muted/80",
     outline: "border bg-background hover:bg-accent",
     ghost: "hover:bg-accent hover:text-accent-foreground",
     destructive: "bg-destructive text-destructive-foreground hover:opacity-90",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { autocompletion, CompletionContext } from "@codemirror/autocomplete";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { EditorState } from "@codemirror/state";
@@ -8,7 +8,7 @@ import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { basicSetup } from "codemirror";
 import { Button } from "@/components/ui/button";
-import { Bold, CheckSquare, Code2, Heading2, Italic, Link, List, ListOrdered, Quote, Minus, Eye, Pencil } from "lucide-react";
+import { Bold, CheckSquare, Code2, Eye, Heading2, Italic, Link, List, ListOrdered, Minus, Pencil, Quote } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -70,7 +70,7 @@ export function MarkdownEditor({ value, onChange }: { value: string; onChange: (
     const view = new EditorView({ state, parent: containerRef.current });
     viewRef.current = view;
     return () => view.destroy();
-  }, [onChange]);
+  }, [onChange, value]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -79,13 +79,11 @@ export function MarkdownEditor({ value, onChange }: { value: string; onChange: (
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
   }, [value]);
 
-  function insert(text: string, selectOffset?: number) {
+  function insert(text: string) {
     const view = viewRef.current;
     if (!view) return;
     const { from, to } = view.state.selection.main;
-    const selected = view.state.sliceDoc(from, to);
-    const insertion = text.replace("$selection", selected);
-    view.dispatch({ changes: { from, to, insert: insertion }, selection: { anchor: from + insertion.length - (selectOffset ?? 0) } });
+    view.dispatch({ changes: { from, to, insert: text } });
     view.focus();
   }
 
@@ -129,5 +127,3 @@ export function MarkdownEditor({ value, onChange }: { value: string; onChange: (
     </div>
   );
 }
-
-import { useState } from "react";

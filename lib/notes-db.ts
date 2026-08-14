@@ -16,9 +16,14 @@ type WorkerRequest =
 
 type WorkerResponse = { id: number; ok: true; payload: unknown } | { id: number; ok: false; error: string };
 
+type PendingRequest<T = unknown> = {
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: unknown) => void;
+};
+
 let worker: Worker | null = null;
 let nextId = 1;
-const pending = new Map<number, { resolve: (value: unknown) => void; reject: (reason: unknown) => void }>();
+const pending = new Map<number, PendingRequest>();
 
 function getWorker() {
   if (typeof window === "undefined") throw new Error("Banco de dados disponível apenas no navegador.");
@@ -38,13 +43,16 @@ function getWorker() {
 function call<T>(request: Omit<WorkerRequest, "id">): Promise<T> {
   const id = nextId++;
   return new Promise<T>((resolve, reject) => {
-    pending.set(id, { resolve, reject });
+    pending.set(id, {
+      resolve: resolve as (value: unknown | PromiseLike<unknown>) => void,
+      reject,
+    });
     getWorker().postMessage({ ...request, id });
   });
 }
 
 export async function listNotes(): Promise<Note[]> {
-  const rows = await call<Array<Record<string, string | number>> >({ type: "list" });
+  const rows = await call<Array<Record<string, string | number>>>({ type: "list" });
   return rows.map((row) => ({
     id: String(row.id),
     title: String(row.title),

@@ -8,22 +8,38 @@ export type Note = {
   category: string;
 };
 
+type NotePayload = {
+  id: string;
+  title: string;
+  content: string;
+  important: number;
+  created_at: string;
+  updated_at: string;
+  category: string;
+};
+
 type WorkerRequest =
   | { id: number; type: "list" }
-  | { id: number; type: "upsert"; note: { id: string; title: string; content: string; important: number; created_at: string; updated_at: string; category: string } }
+  | { id: number; type: "upsert"; note: NotePayload }
   | { id: number; type: "delete"; noteId: string }
   | { id: number; type: "clear" };
 
+type WorkerCommand =
+  | { type: "list" }
+  | { type: "upsert"; note: NotePayload }
+  | { type: "delete"; noteId: string }
+  | { type: "clear" };
+
 type WorkerResponse = { id: number; ok: true; payload: unknown } | { id: number; ok: false; error: string };
 
-type PendingRequest<T = unknown> = {
+type PendingRequest<T> = {
   resolve: (value: T | PromiseLike<T>) => void;
   reject: (reason?: unknown) => void;
 };
 
 let worker: Worker | null = null;
 let nextId = 1;
-const pending = new Map<number, PendingRequest>();
+const pending = new Map<number, PendingRequest<unknown>>();
 
 function getWorker() {
   if (typeof window === "undefined") throw new Error("Banco de dados disponível apenas no navegador.");
@@ -40,14 +56,15 @@ function getWorker() {
   return worker;
 }
 
-function call<T>(request: Omit<WorkerRequest, "id">): Promise<T> {
+function call<T>(request: WorkerCommand): Promise<T> {
   const id = nextId++;
   return new Promise<T>((resolve, reject) => {
     pending.set(id, {
       resolve: resolve as (value: unknown | PromiseLike<unknown>) => void,
       reject,
     });
-    getWorker().postMessage({ ...request, id });
+    const workerRequest: WorkerRequest = { ...request, id };
+    getWorker().postMessage(workerRequest);
   });
 }
 
